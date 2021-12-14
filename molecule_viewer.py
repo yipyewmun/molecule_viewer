@@ -20,9 +20,6 @@ st.title('Molecule Viewer')
 # Read dataset (CSV)
 uploaded_file = sideb.file_uploader("Choose a CSV file that contains a SMILES column")
 
-# Read SMILES
-# query = sideb.text_input("Please enter your SMILES here:")
-
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
     smiles_lst = df['SMILES'].tolist()
