@@ -60,17 +60,17 @@ if compare_molecules:
 
             add_to_list = sideb.button('Add to list?')
             if add_to_list:
-                get_data().append((smiles_1[selected_smiles_1], selected_smiles_2))
+                if (smiles_1[selected_smiles_1], selected_smiles_2) in get_data():
+                    pass
+                else:
+                    get_data().append((smiles_1[selected_smiles_1], selected_smiles_2))
 
             clear_list = sideb.button('Clear List')
             if clear_list:
-                download_list = sideb.download_button('Download list when completed', str([]))
-                if download_list:
-                    st.download_button('Download CSV', str([]))
-            else:
-                download_list = sideb.download_button('Download list when completed', str(get_data()))
-                if download_list:
-                    st.download_button('Download CSV', str(get_data()))
+                get_data().clear()
+
+            if len(get_data()) > 0:
+                download_list = sideb.download_button('Download list when completed ' + '(' + str(len(get_data())) + ' items)', str(get_data()))
 
         else:
             query_1 = sideb.text_input("Please enter your 1st SMILES here:")
