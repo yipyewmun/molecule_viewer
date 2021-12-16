@@ -167,10 +167,14 @@ else:
             # get_idx().append(next_idx)
             # print(get_idx())
         
-        with open('tmp/mol_image.png', 'wb') as png_file:
-            png_file.write(img)
+        try:
+            with open('tmp/mol_image.png', 'wb') as png_file:
+                png_file.write(img)
 
-        st.image('tmp/mol_image.png')
+            st.image('tmp/mol_image.png')
+        except:
+            pass
+        
     else:
         get_idx().clear()
         get_idx().append(0)
