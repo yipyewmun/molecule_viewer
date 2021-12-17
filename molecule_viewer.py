@@ -156,16 +156,18 @@ else:
         if next_structure:
             # Get next index
             next_idx = get_idx()[-1] + 1
+            if next_idx == len(smiles_lst):
+                pass
+            else:
+                mol = Chem.MolFromSmiles(smiles_lst[next_idx])
+                d2d = rdMolDraw2D.MolDraw2DCairo(350,300)
+                d2d.DrawMolecule(mol)
+                d2d.FinishDrawing()
+                img = d2d.GetDrawingText()
 
-            mol = Chem.MolFromSmiles(smiles_lst[next_idx])
-            d2d = rdMolDraw2D.MolDraw2DCairo(350,300)
-            d2d.DrawMolecule(mol)
-            d2d.FinishDrawing()
-            img = d2d.GetDrawingText()
-
-            # print(next_idx)
-            # get_idx().append(next_idx)
-            # print(get_idx())
+                # print(next_idx)
+                # get_idx().append(next_idx)
+                # print(get_idx())
         
         try:
             with open('tmp/mol_image.png', 'wb') as png_file:
