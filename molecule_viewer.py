@@ -140,8 +140,9 @@ else:
                 img = d2d.GetDrawingText()
 
                 # print(prev_idx)
-                # get_idx().append(prev_idx)
+                get_idx().append(prev_idx)
                 # print(get_idx())
+                # st.write('Prev Idx: ' + str(prev_idx))
             else:
                 mol = Chem.MolFromSmiles(smiles_lst[prev_idx])
                 d2d = rdMolDraw2D.MolDraw2DCairo(350,300)
@@ -150,8 +151,9 @@ else:
                 img = d2d.GetDrawingText()
 
                 # print(prev_idx)
-                # get_idx().append(prev_idx)
+                get_idx().append(prev_idx)
                 # print(get_idx())
+                # st.write('Prev Idx: ' + str(prev_idx))
 
         if next_structure:
             # Get next index
@@ -166,8 +168,9 @@ else:
                 img = d2d.GetDrawingText()
 
                 # print(next_idx)
-                # get_idx().append(next_idx)
+                get_idx().append(next_idx)
                 # print(get_idx())
+                # st.write('Next Idx: ' + str(next_idx))
         
         try:
             with open('tmp/mol_image.png', 'wb') as png_file:
