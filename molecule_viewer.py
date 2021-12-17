@@ -139,9 +139,9 @@ else:
                 d2d.FinishDrawing()
                 img = d2d.GetDrawingText()
 
-                print(prev_idx)
-                get_idx().append(prev_idx)
-                print(get_idx())
+                # print(prev_idx)
+                # get_idx().append(prev_idx)
+                # print(get_idx())
             else:
                 mol = Chem.MolFromSmiles(smiles_lst[prev_idx])
                 d2d = rdMolDraw2D.MolDraw2DCairo(350,300)
