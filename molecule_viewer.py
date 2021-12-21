@@ -3,6 +3,7 @@ from pandas.io.parsers import read_csv
 import streamlit as st
 import streamlit.components.v1 as components
 from streamlit import caching
+from bokeh.models.widgets import Div
 import pandas as pd
 
 from rdkit import Chem
@@ -21,6 +22,23 @@ def get_data():
 def get_idx():
     return [0]
 
+def generate_image(smiles):
+    mol = Chem.MolFromSmiles(smiles)
+    d2d = rdMolDraw2D.MolDraw2DCairo(350,300)
+    d2d.DrawMolecule(mol)
+    d2d.FinishDrawing()
+    img = d2d.GetDrawingText()
+
+    return img
+
+def customButton_searchPubChem(button_text, link):
+    if st.button('Search Molecule in PubChem'):
+        js = "window.open('" + link + "')"  # New tab or window
+        html = '<img src onerror="{}">'.format(js)
+        div = Div(text=html)
+        st.bokeh_chart(div)
+
+
 sideb=st.sidebar
 
 # Set header title
@@ -37,27 +55,18 @@ if compare_molecules:
             smiles_1 = df['SMILES_1'].tolist()
             smiles_2 = df['SMILES_2'].tolist()
             
-            # selected_smiles_1 = sideb.selectbox('Select SMILES to visualize', smiles_1)
             selected_smiles_1 = sideb.selectbox('Select Molecule Pair to visualize (' + str(len(smiles_1)) + ' pairs in total)' , range(len(smiles_1)), format_func=lambda x: x+1)
             selected_smiles_2 = smiles_2[selected_smiles_1]
 
-            mol_1 = Chem.MolFromSmiles(smiles_1[selected_smiles_1])
-            d2d = rdMolDraw2D.MolDraw2DCairo(350,300)
-            d2d.DrawMolecule(mol_1)
-            d2d.FinishDrawing()
-            img_1 = d2d.GetDrawingText()
+            img_1 = generate_image(smiles_1[selected_smiles_1])
             with open('tmp/mol_image_1.png', 'wb') as png_file:
                 png_file.write(img_1)
 
-            mol_2 = Chem.MolFromSmiles(selected_smiles_2)
-            d2d = rdMolDraw2D.MolDraw2DCairo(350,300)
-            d2d.DrawMolecule(mol_2)
-            d2d.FinishDrawing()
-            img_2 = d2d.GetDrawingText()
+            img_2 = generate_image(selected_smiles_2)
             with open('tmp/mol_image_2.png', 'wb') as png_file:
                 png_file.write(img_2)
 
-            tanimoto_similarity = DataStructs.FingerprintSimilarity(Chem.RDKFingerprint(mol_1), Chem.RDKFingerprint(mol_2))
+            tanimoto_similarity = DataStructs.FingerprintSimilarity(Chem.RDKFingerprint(Chem.MolFromSmiles(smiles_1[selected_smiles_1])), Chem.RDKFingerprint(Chem.MolFromSmiles(selected_smiles_2)))
             st.write(str(selected_smiles_1+1) + '. Tanimoto Similarity: ' + str(tanimoto_similarity))
 
             col1, col2 = st.columns([1,1])
@@ -82,26 +91,16 @@ if compare_molecules:
 
         else:
             query_1 = sideb.text_input("Please enter your 1st SMILES here:")
-            mol_1 = Chem.MolFromSmiles(query_1)
-            d2d = rdMolDraw2D.MolDraw2DCairo(350,300)
-            d2d.DrawMolecule(mol_1)
-            d2d.FinishDrawing()
-            img_1 = d2d.GetDrawingText()
-
+            img_1 = generate_image(query_1)
             with open('tmp/mol_image_1.png', 'wb') as png_file:
                 png_file.write(img_1)
             
             query_2 = sideb.text_input("Please enter your 2nd SMILES here:")
-            mol_2 = Chem.MolFromSmiles(query_2)
-            d2d = rdMolDraw2D.MolDraw2DCairo(350,300)
-            d2d.DrawMolecule(mol_2)
-            d2d.FinishDrawing()
-            img_2 = d2d.GetDrawingText()
-
+            img_2 = generate_image(query_2)
             with open('tmp/mol_image_2.png', 'wb') as png_file:
                 png_file.write(img_2)
 
-            tanimoto_similarity = DataStructs.FingerprintSimilarity(Chem.RDKFingerprint(mol_1), Chem.RDKFingerprint(mol_2))
+            tanimoto_similarity = DataStructs.FingerprintSimilarity(Chem.RDKFingerprint(Chem.MolFromSmiles(query_1)), Chem.RDKFingerprint(Chem.MolFromSmiles(query_2)))
             st.write('Tanimoto Similarity: ' + str(tanimoto_similarity))
             st.image('tmp/mol_image_1.png')
             st.image('tmp/mol_image_2.png')
@@ -114,83 +113,78 @@ else:
         df = pd.read_csv(uploaded_file)
         smiles_lst = df['SMILES'].tolist()
 
-        # selected_SMILES = sideb.selectbox('Select SMILES to visualize', smiles_lst)
-        # mol = Chem.MolFromSmiles('')
-        # d2d = rdMolDraw2D.MolDraw2DCairo(350,300)
-        # d2d.DrawMolecule(mol)
-        # d2d.FinishDrawing()
-        # img = d2d.GetDrawingText()
-
         col1, col2 = st.columns([1,1])
         with col1:
             previous_structure = st.button('Previous')
         with col2:
             next_structure = st.button('Next')
-        
+
         if previous_structure:
             # Get previous index
             prev_idx = get_idx()[-1] - 1
             if prev_idx < 0:
                 pass
             elif prev_idx == 0:
-                mol = Chem.MolFromSmiles(smiles_lst[prev_idx])
-                d2d = rdMolDraw2D.MolDraw2DCairo(350,300)
-                d2d.DrawMolecule(mol)
-                d2d.FinishDrawing()
-                img = d2d.GetDrawingText()
+                if smiles_lst[prev_idx] == "-":
+                    st.image('tmp/No or Missing Structure.png')
+                else:
+                    img = generate_image(smiles_lst[prev_idx])
+                    with open('tmp/mol_image.png', 'wb') as png_file:
+                        png_file.write(img)
 
-                # print(prev_idx)
+                    st.image('tmp/mol_image.png')
+                    customButton_searchPubChem('Search Molecule in PubChem', 'https://pubchem.ncbi.nlm.nih.gov/#query=' + smiles_lst[prev_idx])
+
                 get_idx().append(prev_idx)
-                # print(get_idx())
-                # st.write('Prev Idx: ' + str(prev_idx))
+
             else:
-                mol = Chem.MolFromSmiles(smiles_lst[prev_idx])
-                d2d = rdMolDraw2D.MolDraw2DCairo(350,300)
-                d2d.DrawMolecule(mol)
-                d2d.FinishDrawing()
-                img = d2d.GetDrawingText()
+                if smiles_lst[prev_idx] == "-":
+                    st.image('tmp/No or Missing Structure.png')
+                else:
+                    img = generate_image(smiles_lst[prev_idx])
+                    with open('tmp/mol_image.png', 'wb') as png_file:
+                        png_file.write(img)
 
-                # print(prev_idx)
+                    st.image('tmp/mol_image.png')
+                    customButton_searchPubChem('Search Molecule in PubChem', 'https://pubchem.ncbi.nlm.nih.gov/#query=' + smiles_lst[prev_idx])
+
                 get_idx().append(prev_idx)
-                # print(get_idx())
-                # st.write('Prev Idx: ' + str(prev_idx))
 
-        if next_structure:
+        elif next_structure:
             # Get next index
             next_idx = get_idx()[-1] + 1
             if next_idx == len(smiles_lst):
                 pass
             else:
-                mol = Chem.MolFromSmiles(smiles_lst[next_idx])
-                d2d = rdMolDraw2D.MolDraw2DCairo(350,300)
-                d2d.DrawMolecule(mol)
-                d2d.FinishDrawing()
-                img = d2d.GetDrawingText()
+                if smiles_lst[next_idx] == "-":
+                    st.image('tmp/No or Missing Structure.png')
+                else:
+                    img = generate_image(smiles_lst[next_idx])
+                    with open('tmp/mol_image.png', 'wb') as png_file:
+                        png_file.write(img)
 
-                # print(next_idx)
+                    st.image('tmp/mol_image.png')
+                    customButton_searchPubChem('Search Molecule in PubChem', 'https://pubchem.ncbi.nlm.nih.gov/#query=' + smiles_lst[next_idx])
+
                 get_idx().append(next_idx)
-                # print(get_idx())
-                # st.write('Next Idx: ' + str(next_idx))
-        
-        try:
-            with open('tmp/mol_image.png', 'wb') as png_file:
-                png_file.write(img)
 
-            st.image('tmp/mol_image.png')
-        except:
-            pass
+        else:
+            if smiles_lst[0] == "-":
+                st.image('tmp/No or Missing Structure.png')
+            else:
+                img = generate_image(smiles_lst[0])
+                with open('tmp/mol_image.png', 'wb') as png_file:
+                    png_file.write(img)
+
+                st.image('tmp/mol_image.png')
+                customButton_searchPubChem('Search Molecule in PubChem', 'https://pubchem.ncbi.nlm.nih.gov/#query=' + smiles_lst[0])
         
     else:
         get_idx().clear()
         get_idx().append(0)
 
         query = sideb.text_input("Please enter your SMILES here:")
-        mol = Chem.MolFromSmiles(query)
-        d2d = rdMolDraw2D.MolDraw2DCairo(350,300)
-        d2d.DrawMolecule(mol)
-        d2d.FinishDrawing()
-        img = d2d.GetDrawingText()
-
+        img = generate_image(query)
         with open('tmp/mol_image.png', 'wb') as png_file:
             png_file.write(img)
 
